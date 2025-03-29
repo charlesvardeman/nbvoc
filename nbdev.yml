@@ -1,0 +1,9 @@
+project:
+  output-dir: _docs
+
+website:
+  title: "nbvoc"
+  site-url: "https://charlesvardeman.github.io/nbvoc/"
+  description: "A Python library extending nbdev for working with vocabularies and ontologies in the context of the Web of Data."
+  repo-branch: main
+  repo-url: "https://github.com/charlesvardeman/nbvoc/"
