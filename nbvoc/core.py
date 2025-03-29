@@ -287,15 +287,36 @@ def nbvoc_export(
     path:str=None, # Path to notebook or directory containing notebooks (default: current dir)
     recursive:bool=True, # Search recursively in directories
     formats:str='turtle', # Output formats (comma-separated list)
-    output_dir:str=None, # Output directory (default: same as notebooks)
+    output_dir:str=None, # Output directory (default: ontology_path from settings.ini)
 ):
     "Export ontology content from notebooks"
+    from nbdev.config import get_config
+    
     path = Path(path or '.')
     format_list = formats.split(',')
     
+    # Use ontology_path from settings.ini or default to 'ontology'
+    if output_dir is None:
+        try:
+            output_dir = get_config().get('ontology_path', 'ontology')
+        except:
+            output_dir = 'ontology'
+    
+    # Create output directory if it doesn't exist
+    output_path = Path(output_dir)
+    output_path.mkdir(parents=True, exist_ok=True)
+    
     # Process a single notebook
     if path.is_file() and path.suffix == '.ipynb':
-        results = process_ontology_notebook(path, output_dir, format_list)
+        # Preserve directory structure relative to current directory
+        rel_path = path.relative_to(Path.cwd())
+        # Get the parent directory for the output
+        rel_dir = rel_path.parent
+        # Create parent directory if needed
+        notebook_output_dir = output_path / rel_dir
+        notebook_output_dir.mkdir(parents=True, exist_ok=True)
+        
+        results = process_ontology_notebook(path, notebook_output_dir, format_list)
         print(f"Exported {path.name} to: {', '.join(str(p) for p in results.values())}")
         return
     
@@ -309,7 +330,15 @@ def nbvoc_export(
             
         for nb_path in notebooks:
             try:
-                results = process_ontology_notebook(nb_path, output_dir, format_list)
+                # Preserve directory structure relative to search path
+                rel_path = nb_path.relative_to(path)
+                # Get the parent directory for the output
+                rel_dir = rel_path.parent
+                # Create parent directory if needed
+                notebook_output_dir = output_path / rel_dir
+                notebook_output_dir.mkdir(parents=True, exist_ok=True)
+                
+                results = process_ontology_notebook(nb_path, notebook_output_dir, format_list)
                 print(f"Exported {nb_path.name} to: {', '.join(str(p) for p in results.values())}")
             except Exception as e:
                 print(f"Error processing {nb_path}: {e}")
